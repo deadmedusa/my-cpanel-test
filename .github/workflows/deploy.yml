@@ -1,7 +1,9 @@
-lftp -c "
-  set ssl:verify-certificate no;
-  open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASS }} ftps://50.30.32.124;
-  cd /public_html;
-  put index.php;
-  bye
-"
+- name: 📂 Deploy to FTP
+  uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+  with:
+    server: 50.30.32.124
+    username: ${{ secrets.FTP_USER }}
+    password: ${{ secrets.FTP_PASS }}
+    protocol: ftps
+    local-dir: ./   # your build folder
+    server-dir: /public_html
