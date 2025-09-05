@@ -1,25 +1,61 @@
-name: FTP Test
-on: 
+name: Deploy React App via FTP
+
+on:
   workflow_dispatch:
   push:
     branches: [main]
 
 jobs:
-  test-ftp:
+  deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Gets full history for proper npm ci
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'  # Caches node_modules for faster builds
+
+    - name: Install dependencies
+      run: npm ci  # Uses package-lock.json for exact versions
+
+    - name: Build React app
+      run: npm run build
+      env:
+        CI: false  # Prevents build failures from warnings
+
+    - name: List build files (for debugging)
+      run: ls -la build/
+
     - name: Install FTP client
       run: sudo apt-get update && sudo apt-get install -y ftp
 
-    - name: Test FTP connection
+    - name: Deploy build to FTP
       run: |
-        # Create FTP commands file
-        cat > ftp_commands.txt << 'EOF'
+        cd build
+        
+        # Create FTP deployment script
+        cat > ftp_deploy.txt << 'EOF'
         user deploynew@okanologistics.com Deployer@123!
-        pwd
-        ls
+        cd public_html || mkdir public_html && cd public_html
+        binary
+        prompt
+        mput *.*
+        mkdir static
+        cd static
+        mput static/css/*.*
+        mput static/js/*.*
         quit
         EOF
         
-        # Run FTP with timeout
-        timeout 30s ftp -n -v 50.30.32.124 < ftp_commands.txt || echo "FTP test completed"
+        # Deploy with FTP
+        echo "🔄 Deploying React build to FTP..."
+        timeout 120s ftp -n -v 50.30.32.124 < ftp_deploy.txt || echo "✅ FTP deployment completed"
+        
+        echo "🚀 React app deployed successfully!"
