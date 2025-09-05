@@ -7,25 +7,22 @@ on:
 jobs:
   ftp-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10  # Prevent long runs
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install lftp with active mode
+      - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 
-      - name: Deploy files via FTP (Active Mode)
-        env:
-          FTP_USER: ${{ secrets.FTP_USER }}
-          FTP_PASS: ${{ secrets.FTP_PASS }}
+      - name: Deploy files via FTP
         run: |
           lftp -e "
             set ftp:passive-mode off;
             set ftp:ssl-allow no;
             set net:timeout 30;
             set net:max-retries 3;
-            open -u '$FTP_USER','$FTP_PASS' ftp://50.30.32.124;
+            open -u 'deploynew@okanologistics.com','Deployer@123!' ftp://50.30.32.124;
             cd public_html;
             mirror -R -v -x '.git/' -x '.github/' . .;
             bye
