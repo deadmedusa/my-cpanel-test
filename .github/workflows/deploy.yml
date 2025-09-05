@@ -1,4 +1,4 @@
-name: Deploy via FTP
+name: FTP Deploy (Blind Upload)
 
 on:
   push:
@@ -15,12 +15,13 @@ jobs:
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 
-      - name: Upload via lftp
+      - name: Blind Upload with lftp
         run: |
-          lftp -e "
+          lftp -c "
             set ssl:verify-certificate no;
+            set ftp:list-options -a;
             open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASS }} ftps://50.30.32.124;
             cd /public_html;
-            mirror -R ./ ./;
+            glob -a put -O . $(find . -type f);
             bye
           "
