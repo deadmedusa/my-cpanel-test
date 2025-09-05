@@ -6,28 +6,19 @@ on:
 jobs:
   ftp-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - name: Install ftp
+      run: sudo apt-get update && sudo apt-get install -y ftp
 
-    - name: Install lftp
-      run: sudo apt-get update && sudo apt-get install -y lftp
-
-    - name: Debug FTP connection with timeout
+    - name: Test FTP with built-in timeout
       run: |
-        timeout 30s bash -c "
-          lftp -e \"
-            set ftp:passive-mode off
-            set ftp:ssl-allow no
-            set net:timeout 5
-            set net:max-retries 2
-            open -u 'deploynew@okanologistics.com','Deployer@123!' ftp://50.30.32.124
-            echo '=== CURRENT DIRECTORY ==='
-            pwd
-            echo '=== DIRECTORY CONTENTS ==='
-            ls -la
-            bye
-          \"
-        " || echo "FTP command completed or timed out"
+        # Create FTP command script
+        cat > ftp_commands.txt << EOF
+        user deploynew@okanologistics.com Deployer@123!
+        pwd
+        ls
+        quit
+        EOF
+        
+        # Run with built-in timeout
+        timeout 30s ftp -n -v 50.30.32.124 < ftp_commands.txt || echo "FTP timed out"
