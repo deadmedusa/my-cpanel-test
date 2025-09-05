@@ -1,34 +1,28 @@
-name: Deploy via FTP
+name: Debug FTP Structure
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  ftp-deploy:
+  debug:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Install lftp
-        run: sudo apt-get update && sudo apt-get install -y lftp
-
-      - name: Discover and create directory structure
+      - name: Debug FTP connection
         run: |
           lftp -e "
             set ftp:passive-mode off;
-            set ftp:ssl-allow no;
             open -u 'deploynew@okanologistics.com','Deployer@123!' ftp://50.30.32.124;
-            echo 'Current directory:';
+            echo '=== CURRENT DIRECTORY ===';
             pwd;
-            echo 'Listing contents:';
+            echo '=== DIRECTORY CONTENTS ===';
             ls -la;
-            echo 'Creating public_html directory...';
-            mkdir -p public_html;
-            echo 'Changing to public_html...';
+            echo '=== ATTEMPTING TO CREATE public_html ===';
+            mkdir public_html;
+            echo '=== CHECKING IF public_html EXISTS NOW ===';
+            ls -la;
+            echo '=== ATTEMPTING TO CHANGE TO public_html ===';
             cd public_html;
-            echo 'Now in:';
+            echo '=== SUCCESS! IN public_html DIRECTORY ===';
             pwd;
             bye
           "
