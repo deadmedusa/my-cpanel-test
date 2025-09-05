@@ -1,28 +1,39 @@
-name: Debug FTP Structure
+name: FTP Deploy
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
-  debug:
+  ftp-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
     steps:
-      - name: Debug FTP connection
-        run: |
-          lftp -e "
-            set ftp:passive-mode off;
-            open -u 'deploynew@okanologistics.com','Deployer@123!' ftp://50.30.32.124;
-            echo '=== CURRENT DIRECTORY ===';
-            pwd;
-            echo '=== DIRECTORY CONTENTS ===';
-            ls -la;
-            echo '=== ATTEMPTING TO CREATE public_html ===';
-            mkdir public_html;
-            echo '=== CHECKING IF public_html EXISTS NOW ===';
-            ls -la;
-            echo '=== ATTEMPTING TO CHANGE TO public_html ===';
-            cd public_html;
-            echo '=== SUCCESS! IN public_html DIRECTORY ===';
-            pwd;
-            bye
-          "
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install lftp
+      run: sudo apt-get update && sudo apt-get install -y lftp
+
+    - name: Debug FTP connection
+      run: |
+        lftp -e "
+          set ftp:passive-mode off
+          set ftp:ssl-allow no
+          open -u 'deploynew@okanologistics.com','Deployer@123!' ftp://50.30.32.124
+          echo '=== CURRENT DIRECTORY ==='
+          pwd
+          echo '=== DIRECTORY CONTENTS ==='
+          ls -la
+          echo '=== ATTEMPTING TO CREATE public_html ==='
+          mkdir public_html
+          echo '=== CHECKING IF public_html EXISTS NOW ==='
+          ls -la
+          echo '=== ATTEMPTING TO CHANGE TO public_html ==='
+          cd public_html
+          echo '=== SUCCESS! IN public_html DIRECTORY ==='
+          pwd
+          bye
+        "
