@@ -7,7 +7,6 @@ on:
 jobs:
   ftp-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -15,15 +14,21 @@ jobs:
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 
-      - name: Deploy files via FTP
+      - name: Discover and create directory structure
         run: |
           lftp -e "
             set ftp:passive-mode off;
             set ftp:ssl-allow no;
-            set net:timeout 30;
-            set net:max-retries 3;
             open -u 'deploynew@okanologistics.com','Deployer@123!' ftp://50.30.32.124;
+            echo 'Current directory:';
+            pwd;
+            echo 'Listing contents:';
+            ls -la;
+            echo 'Creating public_html directory...';
+            mkdir -p public_html;
+            echo 'Changing to public_html...';
             cd public_html;
-            mirror -R -v -x '.git/' -x '.github/' . .;
+            echo 'Now in:';
+            pwd;
             bye
           "
