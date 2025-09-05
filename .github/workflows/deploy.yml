@@ -1,16 +1,33 @@
-name: Network Test
+name: FTP Deploy
 
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  test-network:
+  ftp-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
     steps:
-    - name: Test FTP port connectivity
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install lftp with timeout
+      run: sudo apt-get update && sudo apt-get install -y lftp timeout
+
+    - name: Debug FTP connection with timeout
       run: |
-        # Test if FTP port is open
-        timeout 10s nc -z -v -w 5 50.30.32.124 21 && echo "FTP port 21 is open" || echo "FTP port 21 is closed"
-        
-        # Test if we can establish basic connection
-        timeout 10s bash -c 'echo "QUIT" | nc 50.30.32.124 21' || echo "Cannot connect to FTP"
+        timeout 30s lftp -e "
+          set ftp:passive-mode off
+          set ftp:ssl-allow no
+          set net:timeout 5
+          set net:max-retries 2
+          open -u 'deploynew@okanologistics.com','Deployer@123!' ftp://50.30.32.124
+          echo '=== CURRENT DIRECTORY ==='
+          pwd
+          echo '=== DIRECTORY CONTENTS ==='
+          ls -la
+          bye
+        " || echo "FTP command completed or timed out"
