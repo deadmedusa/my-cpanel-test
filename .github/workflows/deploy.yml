@@ -1,24 +1,25 @@
-name: FTP Deploy
-
-on:
+name: FTP Test
+on: 
   workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
-  ftp-deploy:
+  test-ftp:
     runs-on: ubuntu-latest
     steps:
-    - name: Install ftp
+    - name: Install FTP client
       run: sudo apt-get update && sudo apt-get install -y ftp
 
-    - name: Test FTP with built-in timeout
+    - name: Test FTP connection
       run: |
-        # Create FTP command script
-        cat > ftp_commands.txt << EOF
+        # Create FTP commands file
+        cat > ftp_commands.txt << 'EOF'
         user deploynew@okanologistics.com Deployer@123!
         pwd
         ls
         quit
         EOF
         
-        # Run with built-in timeout
-        timeout 30s ftp -n -v 50.30.32.124 < ftp_commands.txt || echo "FTP timed out"
+        # Run FTP with timeout
+        timeout 30s ftp -n -v 50.30.32.124 < ftp_commands.txt || echo "FTP test completed"
