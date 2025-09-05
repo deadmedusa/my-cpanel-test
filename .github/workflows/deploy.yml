@@ -1,8 +1,6 @@
 name: FTP Deploy
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -14,20 +12,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install lftp with timeout
-      run: sudo apt-get update && sudo apt-get install -y lftp timeout
+    - name: Install lftp
+      run: sudo apt-get update && sudo apt-get install -y lftp
 
     - name: Debug FTP connection with timeout
       run: |
-        timeout 30s lftp -e "
-          set ftp:passive-mode off
-          set ftp:ssl-allow no
-          set net:timeout 5
-          set net:max-retries 2
-          open -u 'deploynew@okanologistics.com','Deployer@123!' ftp://50.30.32.124
-          echo '=== CURRENT DIRECTORY ==='
-          pwd
-          echo '=== DIRECTORY CONTENTS ==='
-          ls -la
-          bye
+        timeout 30s bash -c "
+          lftp -e \"
+            set ftp:passive-mode off
+            set ftp:ssl-allow no
+            set net:timeout 5
+            set net:max-retries 2
+            open -u 'deploynew@okanologistics.com','Deployer@123!' ftp://50.30.32.124
+            echo '=== CURRENT DIRECTORY ==='
+            pwd
+            echo '=== DIRECTORY CONTENTS ==='
+            ls -la
+            bye
+          \"
         " || echo "FTP command completed or timed out"
